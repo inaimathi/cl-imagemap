@@ -17,28 +17,32 @@
 (defun stream->svg-tags (str)
   (let ((tag nil))
     (loop do (setf tag (read-tag str))
-	 when (scan "<(rect|path|polygon|polyline|circle) " tag) collect (parse-tag tag)
+	 when (scan "<(svg|rect|path|polygon|polyline|circle) " tag) collect (parse-tag tag)
 	 until (not tag))))
 
 (defun read-tag (&optional stream)
   (read-section #\< #\> stream))
 
 (defun parse-tag (tag-string)
-  (let ((props (list `("tag-name" . ,(multiple-value-call (lambda (match group) (aref group 0)) (scan-to-strings "<(.*?) " tag-string))))))
-    (do-matches-as-strings (prop "\\w+?=\".*?\"" tag-string nil) 
-      (destructuring-bind (key val) (split "=\"?" prop)
+  (let ((props (list :TAG (intern (string-upcase (regex-first-group "<(.*?) " tag-string))))))
+    (do-matches-as-strings (prop "\\w+?=[\"'].*?[\"']" tag-string nil) 
+      (destructuring-bind (key val) (split "=[\"']?" prop)
 	(let ((parse-fn (cond ((member key '("d" "points") :test #'string=) #'parse-points)
-			      ((member key '("x" "y" "width" "height" "points" "cx" "cy" "r") :test #'string=) (lambda (s) (round (parse-integer s :junk-allowed t))))
-			      (t #'trim-last))))
-	  (setf props (cons `(,key . ,(funcall parse-fn val)) props)))))
+			      ((member key '("x" "y" "width" "height" "points" "cx" "cy" "r") :test #'string=) #'parse-num)
+			      (t #'parse-str))))
+	  (setf props (cons (intern (string-upcase key) :keyword) (cons (funcall parse-fn val) props))))))
     props))
 
 (defun parse-points (point-string)
   (let ((props nil))
-    (do-matches-as-strings (prop "\\d+\\.?\\d* ?, ?\\d+\\.?\\d*" point-string nil)
+    (do-matches-as-strings (prop "\\-?\\d+\\.?\\d* ?, ?\\d+\\.?\\d*" point-string nil)
       (destructuring-bind (x y) (split " ?, ?" prop)
 	(setf props (cons `(,(round (read-from-string x)) . ,(round (read-from-string y))) props))))
     (nreverse props)))
+
+(defun parse-num (num-string) (parse-integer num-string :junk-allowed t))
+
+(defun parse-str (str) (subseq str 0 (- (length str) 1)))
 
 (defun read-section (start end &optional stream)
   (let* ((p (peek-char start stream nil 'eof))
@@ -52,8 +56,12 @@
 (defmacro val-get (key a-list)
   `(cdr (assoc ,key ,a-list :test #'equal)))
 
-(defun trim-last (str)
-  (subseq str 0 (- (length str) 1)))
+(defun regex-first-group (regexp target-string)
+  (multiple-value-call 
+      (lambda (match group) 
+	(declare (ignore match))
+	(aref group 0)) 
+    (scan-to-strings regexp target-string)))
 
 ;; "<rect x=\"12\" y=\"12\" width=\"200\" height=\"100\" />"
 ;; "<path id=\"path2308\" d=\"M 0,1090.4999 L 0,-6.3060668e-014 L 1142.5,-6.3060668e-014 L 2285,-6.3060668e-014 L 2285,1090.4999 L 2285,2180.9999 L 1142.5,2180.9999 L 0,2180.9999 L 0,1090.4999 z \" style=\"fill:#9ec7f3;fill-opacity:1\" />"

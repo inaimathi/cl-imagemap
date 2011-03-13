@@ -10,9 +10,12 @@
 ;;circle has three relevant atributes: cx, cy and r (x,y of the center and the radius)
 ;;path is basically a stripped down implementation of PS in a tag. Frankly, just skip it for now. Implement later if you have the nerve.
 
-(defun test ()
-  (with-open-file (stream "map-na.svg")
+(defun test (file)
+  (with-open-file (stream file)
     (stream->svg-tags stream)))
+
+;; "map_ov-550.rtf"
+;; "map-na.svg"
 
 (defun stream->svg-tags (str)
   (let ((tag nil))
@@ -35,10 +38,9 @@
 
 (defun parse-points (point-string)
   (let ((props nil))
-    (do-matches-as-strings (prop "\\-?\\d+\\.?\\d* ?, ?\\d+\\.?\\d*" point-string nil)
-      (destructuring-bind (x y) (split " ?, ?" prop)
-	(setf props (cons `(,(round (read-from-string x)) . ,(round (read-from-string y))) props))))
-    (nreverse props)))
+    (do-matches-as-strings (prop "\\-?\\d+\\.?\\d*" point-string nil)
+      (setf props (cons (round (read-from-string prop)) props)))
+    (nreverse (loop for (x y) on props by #'cddr collect `(,x . ,y)))))
 
 (defun parse-num (num-string) (parse-integer num-string :junk-allowed t))
 

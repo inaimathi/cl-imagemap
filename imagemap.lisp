@@ -1,7 +1,7 @@
 (dolist (module '(cl-ppcre cl-fad cl-who)) (ql:quickload module))
 
 (defpackage :cl-imagemap 
-  (:use :cl :cl-ppcre :cl-fad :cl-who :xmls :xmls-tools))
+  (:use :cl :cl-ppcre :cl-fad :cl-who))
 (in-package :cl-imagemap)
 
 ;;relevant tags: rect|path|polygon|polyline|circle
@@ -24,9 +24,8 @@
   (read-section #\< #\> stream))
 
 (defun parse-tag (tag-string)
-  (let ((props nil)) ;;(make-hash-table :test 'equal :size 8)
-    (do-matches-as-strings 
-	(prop "\\w+?=\".*?\"" tag-string nil) 
+  (let ((props (list `("tag-name" . ,(multiple-value-call (lambda (match group) (aref group 0)) (scan-to-strings "<(.*?) " tag-string))))))
+    (do-matches-as-strings (prop "\\w+?=\".*?\"" tag-string nil) 
       (destructuring-bind (key val) (split "=\"?" prop)
 	(let ((parse-fn (cond ((member key '("d" "points") :test #'string=) #'parse-points)
 			      ((member key '("x" "y" "width" "height" "points" "cx" "cy" "r") :test #'string=) (lambda (s) (round (parse-integer s :junk-allowed t))))
@@ -36,8 +35,7 @@
 
 (defun parse-points (point-string)
   (let ((props nil))
-    (do-matches-as-strings
-	(prop "\\d+\\.?\\d* ?, ?\\d+\\.?\\d*" point-string nil)
+    (do-matches-as-strings (prop "\\d+\\.?\\d* ?, ?\\d+\\.?\\d*" point-string nil)
       (destructuring-bind (x y) (split " ?, ?" prop)
 	(setf props (cons `(,(round (read-from-string x)) . ,(round (read-from-string y))) props))))
     (nreverse props)))

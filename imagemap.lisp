@@ -10,12 +10,35 @@
 ;;circle has three relevant atributes: cx, cy and r (x,y of the center and the radius)
 ;;path is basically a stripped down implementation of PS in a tag. Frankly, just skip it for now. Implement later if you have the nerve.
 
-(defun test (file)
-  (with-open-file (stream file)
-    (stream->svg-tags stream)))
-
 ;; "map_ov-550.rtf"
 ;; "map-na.svg"
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; output
+(defun svg-tag->area (svg-tag)
+  (let ((points (case (getf svg-tag :tag)
+		  ('rect (destructuring-bind (x y w h) (gets svg-tag :x :y :width :height)
+			   (format nil "~{~a~^,~}" (list x y (+ x w) (+  y h)))))
+		  ('polygon (let ((p (mapcar (lambda (pair) (format nil "~a,~a" (cdr pair) (car pair))) (getf svg-tag :points))))
+			      (if (string= (car p) (car (last p)))
+				  (format nil "~{~a~^,~}" p)
+				  (format nil "~{~a,~}~a" p (car p)))))
+		  (otherwise '(todo - make this work)))))
+    (html-to-stout
+      (:area :shape (getf svg-tag :tag) :class (getf svg-tag :fill) :coords points  :href "#"))))
+
+"<area shape=\"#{type}\" class=\"#{css_class}\" coords=\"#{coords.join(",")}\" href=\"#\" />"
+
+(defmacro gets (object &rest symbols)
+  `(list ,@(loop for s in symbols collect `(getf ,object ,s))))
+
+(defmacro html-to-stout (&body body)
+  "Outputs HTML to standard out."
+  `(with-html-output (*standard-output* nil :indent t) ,@body))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; readers/parsers
+(defun file->svg-tags (file-name)
+  (with-open-file (stream file-name) 
+    (stream->svg-tags stream)))
 
 (defun stream->svg-tags (str)
   (let ((tag nil))

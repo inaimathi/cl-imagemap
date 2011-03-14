@@ -34,13 +34,16 @@
 
 (defun read-word (stream) (read-to " ,.</>{}[]=\\\"" stream))
 
-(defun read-number (stream) (read-while "-+.123456789"))
+(defun read-number (stream) (read-while "123456789"))
+(defun read-float (stream) 
+  (read-number stream)
+  (read-*
 
 ;; (defun read-tag (&optional stream) (read-section #\< #\> stream))
 
-(defun next-char-in? (chars &optional stream)
+(defun next-char-in? (char-seq &optional stream)
   (let ((c (char-list chars))
-	(next-char (peek-char nil stream nil 'eof)))
+	(next-char (peek-char nil stream nil :eof)))
     (values next-char (member next-char c :test #'eql))))
 
 (defun read-section (start end &optional stream)
@@ -52,19 +55,31 @@
   (read-char stream))
 
 (defun skip-to (char &optional stream)
-  (peek-char char stream nil 'eof))
+  (peek-char char stream nil :eof))
 
-(defun read-to (end-chars &optional stream)
-  (let ((c (cons nil (char-list end-chars))))
-    (loop collect (read-char stream nil)
-       until (next-char-in? c stream))))
+(defun read-to (char-seq &optional stream)
+    (let ((c (char-list char-seq)))
+    (cond ((eof? stream) :eof)
+	  ((next-char-in? c stream) nil)
+	  (t (loop 
+		collect (read-char stream) 
+		until (or (eof? stream) (next-char-in? c stream)))))))
 
-(defun read-while (while-chars &optional stream)
-  (let ((c (char-list while-chars)))
-    (loop collect (read-char stream nil)
-       until (not (next-char-in? c stream)))))
-
+(defun read-while (char-seq &optional stream)
+  (let ((c (char-list char-seq)))
+    (cond ((eof? stream) :eof)
+	  ((not (next-char-in? c stream)) nil)
+	  (t (loop 
+		collect (read-char stream) 
+		until (or (eof? stream) (not (next-char-in? c stream))))))))
+  
 (defun ignore-chars (chars &optional stream) (read-while chars stream))
+
+(defun eof? (&optional stream)
+  (eq (peek-char nil stream nil :eof) :eof))
+
+(defun end? (stream char-seq) 
+  (or (eof? stream) (not (next-char-in? c stream))))
 
 (defun char-list (args)
   (cond ((listp args) args)

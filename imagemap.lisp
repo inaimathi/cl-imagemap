@@ -1,39 +1,32 @@
-(dolist (module '(cl-ppcre cl-fad cl-who)) (ql:quickload module))
+(dolist (module '(cl-ppcre cl-who)) (ql:quickload module))
 
-(defpackage :cl-imagemap 
-  (:use :cl :cl-ppcre :cl-fad :cl-who))
+(defpackage :cl-imagemap (:use :cl :cl-ppcre :cl-who))
 (in-package :cl-imagemap)
 
-;;relevant tags: rect|path|polygon|polyline|circle
-;;polygon, polyline are basically the same (a string of x,y pairs in the `points` attribute)
-;;rect is a bit more complicated. four relevant attributes: x, y, width, height
-;;circle has three relevant atributes: cx, cy and r (x,y of the center and the radius)
-;;path is basically a stripped down implementation of PS in a tag. Frankly, just skip it for now. Implement later if you have the nerve.
-
-;; "map_ov-550.rtf"
-;; "map-na.svg"
+(load "util.lisp")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; output
+(defun svg-tree->html (tree)
+  (mapcar #'svg-tag->area tree))
+
 (defun svg-tag->area (svg-tag)
   (let ((points (case (getf svg-tag :tag)
+		  ('polygon (svg-points->area-points (getf svg-tag :points)))
+		  ('polyline (svg-points->area-points (getf svg-tag :points)))
+		  ('path (svg-points->area-points (getf svg-tag :d)))
 		  ('rect (destructuring-bind (x y w h) (gets svg-tag :x :y :width :height)
 			   (format nil "~{~a~^,~}" (list x y (+ x w) (+  y h)))))
-		  ('polygon (let ((p (mapcar (lambda (pair) (format nil "~a,~a" (cdr pair) (car pair))) (getf svg-tag :points))))
-			      (if (string= (car p) (car (last p)))
-				  (format nil "~{~a~^,~}" p)
-				  (format nil "~{~a,~}~a" p (car p)))))
-		  (otherwise '(todo - make this work)))))
+		  ('circle (destructuring-bind (x y radius) (gets svg-tag :cx :cy :r)
+			     (format nil "~{~a~^,~}" (list x y radius))))
+		  (otherwise (error "How the fuck did that happen? Tag type: ~a" (getf svg-tag :tag))))))
     (html-to-stout
       (:area :shape (getf svg-tag :tag) :class (getf svg-tag :fill) :coords points  :href "#"))))
 
-"<area shape=\"#{type}\" class=\"#{css_class}\" coords=\"#{coords.join(",")}\" href=\"#\" />"
-
-(defmacro gets (object &rest symbols)
-  `(list ,@(loop for s in symbols collect `(getf ,object ,s))))
-
-(defmacro html-to-stout (&body body)
-  "Outputs HTML to standard out."
-  `(with-html-output (*standard-output* nil :indent t) ,@body))
+(defun svg-points->area-points (svg-points)
+  (let ((p (mapcar (lambda (pair) (format nil "~a,~a" (car pair) (cdr pair))) svg-points)))
+    (if (string= (car p) (car (last p)))
+	(format nil "~{~a~^,~}" p)
+	(format nil "~{~a,~}~a" p (car p)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; readers/parsers
 (defun file->svg-tags (file-name)
@@ -63,7 +56,7 @@
   (let ((props nil))
     (do-matches-as-strings (prop "\\-?\\d+\\.?\\d*" point-string nil)
       (setf props (cons (round (read-from-string prop)) props)))
-    (nreverse (loop for (x y) on props by #'cddr collect `(,x . ,y)))))
+    (loop for (x y) on (nreverse props) by #'cddr collect (cons x y))))
 
 (defun parse-num (num-string) (parse-integer num-string :junk-allowed t))
 
@@ -77,16 +70,3 @@
 		 unless (member char (list 'eof #\Newline)) collect char
 		 until (member char (list 'eof end)))
 	      'string))))
-
-(defmacro val-get (key a-list)
-  `(cdr (assoc ,key ,a-list :test #'equal)))
-
-(defun regex-first-group (regexp target-string)
-  (multiple-value-call 
-      (lambda (match group) 
-	(declare (ignore match))
-	(aref group 0)) 
-    (scan-to-strings regexp target-string)))
-
-;; "<rect x=\"12\" y=\"12\" width=\"200\" height=\"100\" />"
-;; "<path id=\"path2308\" d=\"M 0,1090.4999 L 0,-6.3060668e-014 L 1142.5,-6.3060668e-014 L 2285,-6.3060668e-014 L 2285,1090.4999 L 2285,2180.9999 L 1142.5,2180.9999 L 0,2180.9999 L 0,1090.4999 z \" style=\"fill:#9ec7f3;fill-opacity:1\" />"

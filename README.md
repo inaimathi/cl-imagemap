@@ -1,12 +1,12 @@
 Not Production Ready
 ====================
 
-### System Goals
+## System Goals
 
-## runtime performance (for a change)
+### runtime performance (for a change)
 It's not ready, but my intention is to expose this as a web-app at some point. That implies that I'll want a short parse/write time for a given map. It hasn't happened yet (I get the feeling it's mainly because of my liberal regex use, but I haven't whipped out the profiler yet. We'll see). It'll be kind of hard to optimize output since that involves mapping over the entire list of tags, so this basically translates to "very fast read time".
 
-## end user flexibility
+### end user flexibility
 This is one reason I don't use an XML-parser like [others](http://davidlynch.org/blog/2008/03/creating-an-image-map-from-svg/) who have attempted an svg to imagemap converter (actually, he seems to be the only one)
 - Firstly because deserializing XML seems like it would be slower than parsing for relevant tags 
 - Second beccause I can get away with it (all but one of the tags relevant to conversion are self-terminating, and I only need the opening tag of that one)
@@ -16,7 +16,7 @@ This is one reason I don't use an XML-parser like [others](http://davidlynch.org
 These are notes for the author rather than usage notes
 ------------------------------------------------------
 
-### The relevant tags are
+## The relevant tags are
 - **polygon** and **polyline** are basically the same. They're a string of `x, y` pairs in the `points` attribute. Just get them, round them (they can be floats in SVG, but seem to be restricted to ints for area tags) and output as a comma separated list (In SVG, they're `points="x,y x,y x,y..."`, in area tags they're `coords="x,y,x,y,x,y..."`
 - **rect** is slightly more complicated. Four relevant attributes: `x`, `y`, `width`, `height` in SVG. The area tags require two `x,y` pairs (top left and bottom right). In other words, `x,y (x+width),(y+height)`
 - **circle** has the same three attributes in SVG and area tags. The coordinates of the center and the radius. They're stored differently though; SVG stores it as three attributes (`cx`, `cy`, `r`) area tags represent it as a comma separated list in the `coords` property

@@ -22,12 +22,15 @@ These are notes for the author rather than usage notes
  - **rect** is slightly more complicated. Four relevant attributes: `x`, `y`, `width`, `height` in SVG. The area tags require two `x,y` pairs (top left and bottom right). In other words, `x,y (x+width),(y+height)`
  - **circle** has the same three attributes in SVG and area tags. The coordinates of the center and the radius. They're stored differently though; SVG stores it as three attributes (`cx`, `cy`, `r`) area tags represent it as a comma separated list in the `coords` property
  - **path** is basically a stripped down implementation of PS in a tag. Right now, it gets parsed and treated the same way as **polygon** and **polyline**, but that'll mishandle the H and V directives (because they each provide single numbers instead of `x,y` pairs). Other than that, it actually works fine.
-
+ - **g** is the SVG group tag. I really don't have to care about them, except that they can have [`transform` attributes](http://apike.ca/prog_svg_transform.html) which have to be applied to all child elements. The good part is that I can probably do that at read time if I'm sneaky enough. The bad part is that I'm not sure whether that's such a good idea...
+ 
 ## TODO
 
 - implement real **path** support. Really, this just means checking if a given directive is marked `H` or `V` and generating an appropriate point for it. Generating the second coordinate could concievably be done at write-time, but I'd still need to track input to make sure that they got stored as single numbers rather than paired randomly.
 
 - improve parser performance. I'm using regexes all over the place, which isn't the best idea speed-wise, but it was good to get it running. This is actually enough for my personal purposes, but it takes about 4 seconds just to parse [this](http://en.wikipedia.org/wiki/File:North_america98.svg), which I get the feeling I can improve.
+
+- implement `transform` support. By the look of it, this'll be either 1, 4 or 5 functions called on each point [under certain conditions](http://www.w3.org/TR/SVG/coords.html#EstablishingANewUserSpace), depending on how I want to implement it. As much as I'd like to abstract the entire thing into `matrix-transform` and then implement `translate`, `scale`, `rotate`, `skew` in terms of them, nested matrix transformations look like they could get scary fast (again, depending on how I implement them).
 
 ## Other notes
 

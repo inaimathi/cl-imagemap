@@ -23,6 +23,7 @@ These are notes for the author rather than usage notes
  - **circle** has the same three attributes in SVG and area tags. The coordinates of the center and the radius. They're stored differently though; SVG stores it as three attributes (`cx`, `cy`, `r`) area tags represent it as a comma separated list in the `coords` property
  - **path** is basically a stripped down implementation of PS in a tag. Right now, it gets parsed and treated the same way as **polygon** and **polyline**, but that'll mishandle the H and V directives (because they each provide single numbers instead of `x,y` pairs). Other than that, it actually works fine.
  - **g** is the SVG group tag. I really don't have to care about them, except that they can have [`transform` attributes](http://apike.ca/prog_svg_transform.html) which have to be applied to all child elements. The good part is that I can probably do that at read time if I'm sneaky enough. The bad part is that I'm not sure whether that's such a good idea...
+ - **svg** the only reason I might care about this is that it contains the document width/height settings (which might come in handy if I want to let the user specify dimensions for this imagemap)
  
 ## TODO
 

@@ -17,10 +17,10 @@ These are notes for the author rather than usage notes
 ------------------------------------------------------
 
 ## The relevant tags are
-- **polygon** and **polyline** are basically the same. They're a string of `x, y` pairs in the `points` attribute. Just get them, round them (they can be floats in SVG, but seem to be restricted to ints for area tags) and output as a comma separated list (In SVG, they're `points="x,y x,y x,y..."`, in area tags they're `coords="x,y,x,y,x,y..."`
-- **rect** is slightly more complicated. Four relevant attributes: `x`, `y`, `width`, `height` in SVG. The area tags require two `x,y` pairs (top left and bottom right). In other words, `x,y (x+width),(y+height)`
-- **circle** has the same three attributes in SVG and area tags. The coordinates of the center and the radius. They're stored differently though; SVG stores it as three attributes (`cx`, `cy`, `r`) area tags represent it as a comma separated list in the `coords` property
-- **path** is basically a stripped down implementation of PS in a tag. Right now, it gets parsed and treated the same way as **polygon** and **polyline**, but that'll mishandle the H and V directives (because they each provide single numbers instead of `x,y` pairs). Other than that, it actually works fine.
+ - **polygon** and **polyline** are basically the same. They're a string of `x, y` pairs in the `points` attribute. Just get them, round them (they can be floats in SVG, but seem to be restricted to ints for area tags) and output as a comma separated list (In SVG, they're `points="x,y x,y x,y..."`, in area tags they're `coords="x,y,x,y,x,y..."`
+ - **rect** is slightly more complicated. Four relevant attributes: `x`, `y`, `width`, `height` in SVG. The area tags require two `x,y` pairs (top left and bottom right). In other words, `x,y (x+width),(y+height)`
+ - **circle** has the same three attributes in SVG and area tags. The coordinates of the center and the radius. They're stored differently though; SVG stores it as three attributes (`cx`, `cy`, `r`) area tags represent it as a comma separated list in the `coords` property
+ - **path** is basically a stripped down implementation of PS in a tag. Right now, it gets parsed and treated the same way as **polygon** and **polyline**, but that'll mishandle the H and V directives (because they each provide single numbers instead of `x,y` pairs). Other than that, it actually works fine.
 
 ## TODO
 

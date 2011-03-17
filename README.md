@@ -8,10 +8,10 @@ It's not ready, but my intention is to expose this as a web-app at some point. T
 
 ### end user flexibility
 This is one reason I don't use an XML-parser like [others](http://davidlynch.org/blog/2008/03/creating-an-image-map-from-svg/) who have attempted an svg to imagemap converter (actually, he seems to be the only one)
-- Firstly because deserializing XML seems like it would be slower than parsing for relevant tags 
-- Second beccause I can get away with it (all but one of the tags relevant to conversion are self-terminating, and I only need the opening tag of that one)
-- Third because it seems like it would be more difficult to get these tags out through a xpath expressions rather than through straight search (tags can be arbitrarily grouped, which means I can't just get all children of `svg/`)
-- Finally because XML parsers tend to barf when some jackass from marketing gives you an RTF file instead of an SVG (or a partial copy of an SVG). I would prefer this not barf if it can get any data at all out of the input.
+ - Firstly because deserializing XML seems like it would be slower than parsing for relevant tags 
+ - Second beccause I can get away with it (all but one of the tags relevant to conversion are self-terminating, and I only need the opening tag of that one)
+ - Third because it seems like it would be more difficult to get these tags out through a xpath expressions rather than through straight search (tags can be arbitrarily grouped, which means I can't just get all children of `svg/`)
+ - Finally because XML parsers tend to barf when some jackass from marketing gives you an RTF file instead of an SVG (or a partial copy of an SVG). I would prefer this not barf if it can get any data at all out of the input.
 
 These are notes for the author rather than usage notes
 ------------------------------------------------------
